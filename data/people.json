@@ -2,49 +2,49 @@
   {
     "slug": "1",
     "name": "Pilla",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Pilla forever.",
     "accent": "#e8623d",
     "links": []
   },
   {
     "slug": "2",
     "name": "Bernd",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Der Chef bin ICH.",
     "accent": "#3d8ee8",
     "links": []
   },
   {
     "slug": "3",
     "name": "Mike",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Einen haben wir aber noch.",
     "accent": "#2fb08a",
     "links": []
   },
   {
     "slug": "4",
     "name": "Body",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Da muss ich mich mal schlau machen.",
     "accent": "#b657d6",
     "links": []
   },
   {
     "slug": "5",
     "name": "Rochus",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Ich bin auch dabei.",
     "accent": "#d9a323",
     "links": []
   },
   {
     "slug": "6",
     "name": "Ulli",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Muss ich jetzt von der Couch runter.",
     "accent": "#e0507f",
     "links": []
   },
   {
     "slug": "7",
     "name": "Otto",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Stress mivh nicht.",
     "accent": "#5566e0",
     "links": []
   },
@@ -58,14 +58,14 @@
   {
     "slug": "9",
     "name": "Harry",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Haben die auch Cognac.",
     "accent": "#c9603a",
     "links": []
   },
   {
     "slug": "10",
     "name": "Helmut",
-    "spruch": "Hier steht was Lustiges über mich.",
+    "spruch": "Bei einem guten Weisswein sage ich nicht nein.",
     "accent": "#00a3a3",
     "links": []
   }
