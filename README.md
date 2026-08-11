@@ -188,11 +188,29 @@ verlinkt. Rohdaten als JSON gibt es unter `<counterUrl>/stats`.
 
 ### Was gespeichert wird
 
-Pro Scan genau zwei Angaben: **welche Karte** und **wann**. Keine IP-Adresse,
-kein User-Agent, kein Cookie, keine Kennung, mit der sich zwei Scans einander
-zuordnen liessen. Deshalb braucht die Seite auch kein Consent-Banner. Die
-Datenschutzseite beschreibt genau das – wenn du am Worker etwas änderst, halte
-sie bitte aktuell (`privacyPage` in `src/templates.mjs`).
+Pro Aufruf genau drei Angaben: **welche Karte**, **wann** und die **Herkunft**
+(`scan`, `main` oder `card`). Keine IP-Adresse, kein User-Agent, kein Cookie,
+keine Kennung, mit der sich zwei Scans einander zuordnen liessen. Deshalb
+braucht die Seite auch kein Consent-Banner. Die Datenschutzseite beschreibt
+genau das – wenn du am Worker etwas änderst, halte sie bitte aktuell
+(`privacyPage` in `src/templates.mjs`).
+
+### Scan oder Durchklicken
+
+Wer über die Übersicht alle zehn Karten anschaut, würde sonst zehn Scans
+erzeugen. Deshalb hält jeder Datensatz fest, woher der Aufruf kam:
+
+| Wert   | Bedeutung |
+| ------ | --------- |
+| `scan` | kein Referrer – also direkt vom QR-Code (oder aus einem Chat, per Lesezeichen …) |
+| `main` | Klick von der Startseite aus |
+| `card` | Klick von einer anderen Karte aus |
+
+Als Scan gilt nur `scan`; die Rangliste zeigt ausschliesslich diese Zahl,
+`main` und `card` werden getrennt darunter ausgewiesen. Ermittelt wird das im
+Browser über `document.referrer` – **nicht** über die URL, damit die gedruckten
+QR-Codes unverändert bleiben. Ohne JavaScript greift ein `<noscript>`-Pixel:
+dann wird weiterhin gezählt, nur ohne Herkunft, und die Zeile gilt als Scan.
 
 Vorschau-Bots von WhatsApp, Telegram & Co. werden am User-Agent erkannt und
 nicht mitgezählt, sonst würde jeder geteilte Link die Statistik aufblähen.

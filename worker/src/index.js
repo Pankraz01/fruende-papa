@@ -11,6 +11,12 @@
 
 const SLUGS = new Set(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']);
 
+// Woher der Aufruf kam. `scan` ist der interessante Fall: kein Referrer, also
+// direkt vom QR-Code. `main` und `card` sind Klicks innerhalb der Seite und
+// zählen nicht als Scan. Alles andere wird auf `scan` normalisiert, damit
+// niemand über den Parameter beliebige Werte in die Datenbank schreiben kann.
+const SOURCES = new Set(['scan', 'main', 'card']);
+
 // Vorschau-Bots von WhatsApp, Telegram & Co. laden die Seite mit, sobald jemand
 // einen Link teilt. Ohne diesen Filter zählt jeder geteilte Link als Scan.
 const BOT = /bot|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|skype|slack|discord|twitter|linkedinbot|embedly|pinterest|curl|wget|python-requests|okhttp|headless|lighthouse|pagespeed|uptime|monitor/i;
@@ -44,12 +50,15 @@ async function countScan(request, env, url) {
   const person = url.searchParams.get('p');
   const agent = request.headers.get('user-agent') || '';
 
+  const roh = url.searchParams.get('from');
+  const src = SOURCES.has(roh) ? roh : 'scan';
+
   // Ein unbekannter Slug oder ein Bot wird still ignoriert – das Pixel kommt
   // trotzdem zurück, damit auf der Karte kein kaputtes Bild erscheint.
   if (SLUGS.has(person) && !BOT.test(agent)) {
     try {
-      await env.DB.prepare('INSERT INTO scans (person, ts) VALUES (?, ?)')
-        .bind(person, Date.now())
+      await env.DB.prepare('INSERT INTO scans (person, ts, src) VALUES (?, ?, ?)')
+        .bind(person, Date.now(), src)
         .run();
     } catch (err) {
       // Ein fehlgeschlagener Zähler darf die Visitenkarte nie stören.
@@ -71,19 +80,27 @@ async function countScan(request, env, url) {
 
 async function readStats(request, env) {
   try {
+    // `count` sind echte Scans vom Shirt, `intern` sind Klicks aus der
+    // Übersicht heraus. Zeilen ohne `src` stammen aus der Zeit vor der
+    // Herkunftserkennung und gelten als Scan.
+    const istScan = `(src IS NULL OR src = 'scan')`;
+
     const proPerson = await env.DB.prepare(
-      `SELECT person, COUNT(*) AS count, MAX(ts) AS last
+      `SELECT person,
+              SUM(CASE WHEN ${istScan} THEN 1 ELSE 0 END) AS count,
+              SUM(CASE WHEN ${istScan} THEN 0 ELSE 1 END) AS intern,
+              MAX(ts) AS last
          FROM scans
         GROUP BY person
         ORDER BY count DESC`
     ).all();
 
-    // Verlauf der letzten 30 Tage.
+    // Verlauf der letzten 30 Tage, nur echte Scans.
     const seit = Date.now() - 30 * 24 * 60 * 60 * 1000;
     const proTag = await env.DB.prepare(
       `SELECT date(ts / 1000, 'unixepoch') AS tag, COUNT(*) AS count
          FROM scans
-        WHERE ts >= ?
+        WHERE ts >= ? AND ${istScan}
         GROUP BY tag
         ORDER BY tag`
     )
@@ -95,6 +112,7 @@ async function readStats(request, env) {
     return json(
       {
         total: people.reduce((sum, r) => sum + r.count, 0),
+        internTotal: people.reduce((sum, r) => sum + r.intern, 0),
         people,
         perDay: proTag.results ?? [],
       },

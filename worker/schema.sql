@@ -9,7 +9,8 @@
 CREATE TABLE IF NOT EXISTS scans (
   id     INTEGER PRIMARY KEY AUTOINCREMENT,
   person TEXT    NOT NULL,
-  ts     INTEGER NOT NULL   -- Unix-Zeit in Millisekunden
+  ts     INTEGER NOT NULL,  -- Unix-Zeit in Millisekunden
+  src    TEXT              -- 'scan' vom QR-Code, 'main'/'card' aus der Seite heraus
 );
 
 CREATE INDEX IF NOT EXISTS scans_person_idx ON scans (person);

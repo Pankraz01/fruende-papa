@@ -13,16 +13,35 @@ export const esc = (s) =>
 
 /** Zähl-Pixel für den eigenen Cloudflare-Worker.
  *
- *  Bewusst ein <img> und kein fetch(): so wird auch ohne JavaScript gezählt,
- *  und es braucht keine CORS-Vorabanfrage. Ohne counterUrl entfällt es ganz –
- *  lokales Testen verfälscht die Statistik also nicht. */
-function counterPixel(config, person) {
+ *  Ein Bild und kein fetch(): kein CORS-Vorflug, und es zählt auch ohne
+ *  JavaScript. Ohne counterUrl entfällt alles – lokales Testen verfälscht die
+ *  Statistik also nicht.
+ *
+ *  Woher der Aufruf kam, verrät `document.referrer`: beim Scan aus der
+ *  Kamera-App ist er leer, beim Klick aus der Übersicht steht dort unsere
+ *  Startseite. Das braucht JavaScript, taucht aber weder in der URL auf noch
+ *  im QR-Code. Wer JS aus hat, wird über <noscript> weiterhin gezählt – dann
+ *  eben ohne Herkunft. */
+function counterBeacon(config, person) {
   if (!config.counterUrl || !person) return '';
-  return `\n  <img class="px" src="${esc(config.counterUrl)}/px?p=${encodeURIComponent(person.slug)}" alt="" width="1" height="1" aria-hidden="true">`;
+
+  const api = JSON.stringify(`${config.counterUrl}/px?p=${encodeURIComponent(person.slug)}`);
+  const base = JSON.stringify(config.baseUrl);
+
+  return `
+  <script>
+    (function () {
+      var base = ${base}, ref = document.referrer, from = 'scan';
+      if (ref === base + '/' || ref === base) from = 'main';
+      else if (ref.indexOf(base + '/') === 0) from = 'card';
+      new Image().src = ${api} + '&from=' + from;
+    })();
+  </script>
+  <noscript><img class="px" src="${esc(`${config.counterUrl}/px?p=${encodeURIComponent(person.slug)}`)}" alt="" width="1" height="1" aria-hidden="true"></noscript>`;
 }
 
 /** Gemeinsamer <head>. `base` ist der relative Pfad zum Wurzelverzeichnis. */
-function head({ title, description, base, config, person, ogImage, ogUrl }) {
+function head({ title, description, base, config, person, ogImage, ogUrl, noindex }) {
   const meta = [
     `<meta property="og:type" content="profile">`,
     `<meta property="og:title" content="${esc(title)}">`,
@@ -40,7 +59,9 @@ function head({ title, description, base, config, person, ogImage, ogUrl }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>${esc(title)}</title>
-  <meta name="description" content="${esc(description)}">
+  <meta name="description" content="${esc(description)}">${
+    noindex ? '\n  <meta name="robots" content="noindex, nofollow">' : ''
+  }
   <meta name="theme-color" content="${esc(person?.accent || '#e8623d')}">
   ${meta}
   <link rel="stylesheet" href="${base}style.css">
@@ -98,7 +119,7 @@ export function cardPage(person, { config, warn }) {
     <h1 class="name">${esc(person.name)}</h1>
     <p class="spruch">${esc(person.spruch)}</p>${links.html}
   </main>
-  ${footer(base, config)}${counterPixel(config, person)}
+  ${footer(base, config)}${counterBeacon(config, person)}
 </body>
 </html>
 `;
@@ -132,7 +153,6 @@ export function indexPage(people, { config }) {
     <ul class="grid">
 ${tiles}
     </ul>
-    ${config.counterUrl ? `<p class="stats-link"><a href="./stats/">Scan-Statistik ansehen →</a></p>` : ''}
   </main>
   ${footer('./', config)}
 </body>
@@ -192,19 +212,31 @@ export function statsPage(people, { config }) {
         '</li>';
       }).join('');
 
-      document.getElementById('hint').textContent = data.total
-        ? 'Gezählt wird jeder Aufruf einer Karte. Mehr dazu unter Datenschutz.'
+      var hinweis = data.total
+        ? 'Gezählt werden nur Aufrufe vom QR-Code. Mehr dazu unter Datenschutz.'
         : 'Noch kein einziger Scan. Shirt anziehen und rausgehen.';
+
+      if (data.internTotal) {
+        hinweis += ' Dazu kommen ' + data.internTotal + ' Klick' +
+          (data.internTotal === 1 ? '' : 's') +
+          ' über diese Seite, die nicht als Scan zählen.';
+      }
+
+      document.getElementById('hint').textContent = hinweis;
     }
   </script>`
     : `    <p>Der Zähler ist noch nicht eingerichtet – in <code>site.config.json</code>
     fehlt die <code>counterUrl</code>. Wie das geht, steht in der README.</p>`;
 
+  // Nirgends verlinkt und nicht indexiert – wer die Statistik sehen will, muss
+  // die Adresse kennen. Bewusst kein Eintrag in einer robots.txt: die wäre
+  // öffentlich und würde den Pfad erst recht verraten.
   return `${head({
     title: `Scan-Statistik · ${config.siteTitle}`,
     description: 'Wer wurde am häufigsten gescannt?',
     base: '../',
     config,
+    noindex: true,
   })}
 <body class="page-wide">
   <main class="page">
@@ -224,8 +256,10 @@ export function privacyPage({ config }) {
   const gaBlock = config.counterUrl
     ? `<h2>Was gemessen wird</h2>
     <p>Wir zählen, wie oft welches Shirt gescannt wurde – mehr nicht. Beim Aufruf
-    einer Visitenkarte wird genau zweierlei gespeichert: <strong>welche Karte</strong>
-    aufgerufen wurde und <strong>wann</strong>. Das war's.</p>
+    einer Visitenkarte wird genau dreierlei gespeichert: <strong>welche Karte</strong>
+    aufgerufen wurde, <strong>wann</strong>, und ob der Aufruf <strong>vom QR-Code
+    kam oder von einem Klick auf dieser Seite</strong> – damit wir uns die Statistik
+    nicht selbst kaputtklicken. Das war's.</p>
 
     <p>Nicht gespeichert werden: deine IP-Adresse, dein Gerät, dein Browser, dein
     Standort, ein Verweis auf die Seite, von der du kamst, oder irgendeine Kennung,
@@ -251,9 +285,14 @@ export function privacyPage({ config }) {
     einem Inhaltsblocker – wird nicht gezählt. Die Visitenkarte funktioniert dann
     ganz normal weiter.</p>
 
+    <p>Woher der Aufruf kam, wird aus der Adresse der zuvor besuchten Seite
+    abgeleitet, die dein Browser ohnehin mitschickt. Gespeichert wird davon nicht
+    die Adresse, sondern nur die Einordnung „vom QR-Code“ oder „von dieser Seite“.</p>
+
     <h2>Was dabei herauskommt</h2>
-    <p>Das Ergebnis ist nicht geheim: die <a href="./stats/">Scan-Statistik</a>
-    kann sich jeder ansehen.</p>`
+    <p>Am Ende steht eine schlichte Rangliste: wie oft welche Karte aufgerufen
+    wurde. Über einzelne Besucherinnen und Besucher steht dort nichts – es gibt
+    schlicht nichts, was sich einer Person zuordnen liesse.</p>`
     : `<h2>Was gemessen wird</h2>
     <p>Aktuell ist keine Messung aktiv. Diese Seite ist rein statisch, setzt keine
     Cookies und sendet keine Daten an Dritte.</p>`;
