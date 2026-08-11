@@ -1,6 +1,17 @@
 /* Echte Fründe – Visitenkarten
    Mobile-first: die Seite wird praktisch immer vom Handy aus gescannt. */
 
+/* UnifrakturMaguntia, SIL Open Font License 1.1 – selbst gehostet, damit beim
+   Scannen kein Fremdserver kontaktiert wird. Nur die Startseite benutzt sie;
+   die Kartenseiten laden die Datei deshalb gar nicht erst. */
+@font-face {
+  font-family: 'UnifrakturMaguntia';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('fonts/unifrakturmaguntia-latin.woff2') format('woff2');
+}
+
 :root {
   --accent: #e8623d;
   --bg: #f3f1ee;
@@ -196,6 +207,27 @@ body.page-wide {
 .page .lead {
   color: var(--muted);
   margin: 0 0 28px;
+}
+
+/* Startseite: Kopfbereich mittig. Nur der Titel bekommt die Fraktur-Schrift –
+   der Untertitel bleibt bewusst gut lesbar. */
+.home-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.home-header .brand {
+  font-family: 'UnifrakturMaguntia', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 11vw, 3.6rem);
+  line-height: 1.1;
+  letter-spacing: 0;
+  margin: 0 0 10px;
+}
+
+.home-header .lead {
+  margin: 0 auto;
+  max-width: 30ch;
 }
 
 .page h2 {

@@ -82,13 +82,26 @@ Erlaubt sind `.jpg`, `.jpeg`, `.png`, `.webp` und `.avif`. Wer es ganz explizit
 will, setzt in `data/people.json` ein `"image": "irgendwas.jpg"` – das schlägt
 beide Namenskonventionen.
 
-Am besten **quadratisch, ca. 600×600 px**. Das Bild wird rund beschnitten und
-füllt den Kreis aus (`object-fit: cover`), Wichtiges gehört also in die Mitte.
-Breite Bilder verlieren links und rechts etwas – bei Logos mit Schriftzug fällt
-das schnell auf.
+Das Bild wird rund beschnitten und füllt den Kreis aus (`object-fit: cover`),
+Wichtiges gehört also in die Mitte. Breite Bilder verlieren links und rechts
+etwas – bei Logos mit Schriftzug fällt das schnell auf.
 
 Fehlt ein Bild, nimmt der Build automatisch einen Platzhalter und sagt beim
 Bauen Bescheid.
+
+### Neue Fotos klein rechnen
+
+Handyfotos haben gut und gern 5–10 MB. Angezeigt wird das Bild als 108-px-Kreis,
+gebraucht wird davon also ein Bruchteil. Auf dem Mac reicht das eingebaute `sips`:
+
+```bash
+sips -s format jpeg -s formatOptions 85 -Z 800 FOTO.png --out static/img/name.jpg
+```
+
+`-Z 800` begrenzt die längere Kante auf 800 px, `formatOptions 85` ist die
+JPEG-Qualität. Das ergibt rund 100–170 KB pro Bild, ohne dass man auf dem Handy
+einen Unterschied sieht. Die Originale der zehn liegen unverändert in
+`orig-pics/` – der Ordner ist in `.gitignore` und landet nicht auf GitHub.
 
 ## Veröffentlichen (GitHub Pages)
 
@@ -157,9 +170,16 @@ src/templates.mjs     HTML der Karten, Übersicht, Datenschutz, 404, QR-Bogen
 src/icons.mjs         Icons und URL-Aufbau der Kontakt-Buttons
 src/style.css         gesamtes Design
 static/img/           Profilbilder, Platzhalter, Favicon
+static/fonts/         Fraktur-Schrift für den Titel der Startseite
+orig-pics/            unbearbeitete Originalfotos (gitignored)
 build.mjs             baut dist/ inklusive QR-Codes
 dist/                 generiert – nicht von Hand bearbeiten
 ```
+
+Der Titel „Echte Fründe" auf der Startseite läuft in **UnifrakturMaguntia**
+(SIL Open Font License 1.1). Die Schrift liegt selbst gehostet im Repo, es wird
+beim Scannen also kein Google-Server kontaktiert. Nur die Startseite benutzt sie –
+die Kartenseiten laden die Datei gar nicht erst.
 
 Die ausgelieferten Karten sind reines HTML und CSS. JavaScript läuft nur für
 Analytics – fällt es aus, ist die Visitenkarte trotzdem vollständig da.

@@ -132,9 +132,11 @@ export function indexPage(people, { config }) {
     ogUrl: `${config.baseUrl}/`,
   })}
 <body class="page-wide">
-  <main class="page">
-    <h1>${esc(config.siteTitle)}</h1>
-    <p class="lead">${esc(config.siteDescription)}</p>
+  <main class="page page--home">
+    <header class="home-header">
+      <h1 class="brand">${esc(config.siteTitle)}</h1>
+      <p class="lead">${esc(config.siteDescription)}</p>
+    </header>
     <ul class="grid">
 ${tiles}
     </ul>

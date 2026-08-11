@@ -57,7 +57,12 @@ try {
 /* --------------------------------------------------- Prüfen & ergänzen */
 
 const imageDir = path.join(root, 'static', 'img');
-const availableImages = existsSync(imageDir) ? await readdir(imageDir) : [];
+
+// Nur echte Bilddateien – sonst landen .DS_Store und Konsorten mit im Deploy.
+const availableImages = (existsSync(imageDir) ? await readdir(imageDir) : []).filter(
+  (f) => !f.startsWith('.') && [...IMAGE_EXTENSIONS, '.svg'].includes(path.extname(f).toLowerCase())
+);
+
 const seenSlugs = new Set();
 
 // Gross-/Kleinschreibung soll beim Dateinamen egal sein (Ivan.PNG vs ivan.png).
@@ -129,6 +134,16 @@ await copyFile(path.join(root, 'src', 'style.css'), path.join(dist, 'style.css')
 
 for (const file of availableImages) {
   await copyFile(path.join(imageDir, file), path.join(dist, 'img', file));
+}
+
+// Schriften mitkopieren (nur die Startseite braucht sie, siehe style.css).
+const fontDir = path.join(root, 'static', 'fonts');
+if (existsSync(fontDir)) {
+  await mkdir(path.join(dist, 'fonts'), { recursive: true });
+  for (const file of await readdir(fontDir)) {
+    if (file.startsWith('.')) continue;
+    await copyFile(path.join(fontDir, file), path.join(dist, 'fonts', file));
+  }
 }
 
 for (const person of people) {
