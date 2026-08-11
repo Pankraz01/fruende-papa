@@ -11,7 +11,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 
-import { cardPage, indexPage, privacyPage, notFoundPage, qrSheet } from './src/templates.mjs';
+import {
+  cardPage,
+  indexPage,
+  statsPage,
+  privacyPage,
+  notFoundPage,
+  qrSheet,
+} from './src/templates.mjs';
 import { LINK_TYPE_NAMES } from './src/icons.mjs';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -155,6 +162,10 @@ for (const person of people) {
 }
 
 await writeFile(path.join(dist, 'index.html'), indexPage(people, { config }));
+
+await mkdir(path.join(dist, 'stats'), { recursive: true });
+await writeFile(path.join(dist, 'stats', 'index.html'), statsPage(people, { config }));
+
 await writeFile(path.join(dist, 'datenschutz.html'), privacyPage({ config }));
 await writeFile(path.join(dist, '404.html'), notFoundPage({ config }));
 
@@ -191,7 +202,7 @@ await writeFile(path.join(dist, 'qr', 'index.html'), qrSheet(people, { config })
 
 console.log(`✓ ${people.length} Visitenkarten gebaut nach dist/`);
 console.log(`  Basis-URL: ${config.baseUrl}`);
-console.log(`  Analytics: ${config.ga4Id ? config.ga4Id : 'aus (keine ga4Id gesetzt)'}`);
+console.log(`  Zähler:    ${config.counterUrl ? config.counterUrl : 'aus (keine counterUrl gesetzt)'}`);
 console.log(`  QR-Codes:  dist/qr/index.html`);
 
 if (warnings.length) {

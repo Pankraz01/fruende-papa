@@ -1,0 +1,14 @@
+name = "fruende-scans"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+# Nur von dieser Herkunft darf die Statistikseite den Zähler auslesen.
+# Muss zur baseUrl in ../site.config.json passen (nur Schema + Host, ohne Pfad).
+ALLOWED_ORIGIN = "https://pankraz01.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fruende-scans"
+# Angelegt am 11.08.2026 in der Region WEUR, Tabelle `scans` ist eingespielt.
+database_id = "37ec5cba-6914-464e-95ac-62530bdeb15d"

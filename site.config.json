@@ -1,7 +1,8 @@
 {
   "_hinweis": "baseUrl MUSS final sein, bevor die QR-Codes gedruckt werden. Ohne Slash am Ende.",
   "baseUrl": "https://pankraz01.github.io/fruende-papa",
-  "ga4Id": "",
+  "counterUrl": "https://fruende-scans.echte-fruende.workers.dev",
+  "_counterUrl": "Adresse des Cloudflare-Workers, z.B. https://fruende-scans.DEIN-SUBDOMAIN.workers.dev - ohne Slash am Ende. Solange leer, wird nicht gezählt.",
   "siteTitle": "Echte Fründe",
   "siteDescription": "Echte Fründe ston zesamme su wie eine Jott un Pott"
 }

@@ -28,7 +28,7 @@ Dann <http://localhost:5173> öffnen.
 | Name oder Spruch ändern        | `data/people.json`                                    |
 | Profilbild tauschen            | `static/img/<slug>.jpg`                               |
 | Kontakt-Buttons anpassen       | `data/people.json` → `links`                          |
-| Basis-URL oder GA-ID setzen    | `site.config.json`                                    |
+| Basis-URL oder Zähler setzen   | `site.config.json`                                    |
 | Design ändern                  | `src/style.css`                                       |
 | Aufbau der Seiten ändern       | `src/templates.mjs`                                   |
 
@@ -120,27 +120,89 @@ einen Unterschied sieht. Die Originale der zehn liegen unverändert in
 > `fruende` als etwas Langes mit Umlaut – letzteres landet als
 > `EchteFr%C3%BCnde…` in der URL und bläht den Code unnötig auf.
 
-## Google Analytics einrichten
+## Scan-Zähler einrichten (Cloudflare)
 
-1. In [analytics.google.com](https://analytics.google.com) eine Property mit einem
-   Web-Datenstream anlegen und die Mess-ID kopieren (Format `G-XXXXXXXXXX`).
-2. Die ID in `site.config.json` unter `ga4Id` eintragen und neu bauen.
+GitHub Pages zählt selbst nichts – es gibt dort keine Logs, keine Statistik, keine
+API. (Die Zahlen unter *Insights → Traffic* im Repo zählen Aufrufe der
+**Repo-Seite auf github.com**, nicht die gescannten Visitenkarten.) Der Zähler
+läuft deshalb als eigener kleiner Cloudflare Worker. **Die Seite bleibt auf
+GitHub Pages, die `baseUrl` und damit die gedruckten QR-Codes ändern sich nicht.**
 
-Solange `ga4Id` leer ist, wird gar kein Analytics-Code eingebaut – lokales Testen
+Gezählt wird über ein unsichtbares 1×1-Pixel-Bild auf jeder Karte. Das braucht
+kein JavaScript und keine CORS-Vorabanfrage.
+
+Alles liegt in `worker/`. Die einmalige Einrichtung läuft in einem normalen
+Terminal, alle Befehle im Ordner `worker/`. `login` öffnet den Browser zur
+Anmeldung; `npx` lädt wrangler bei Bedarf, eine globale Installation ist nicht
+nötig.
+
+> **Stand 11.08.2026:** Schritt 1 und 2 sind bereits erledigt. Die Datenbank
+> `fruende-scans` existiert (Region WEUR), die Tabelle `scans` samt Indizes ist
+> eingespielt, und die `database_id` steht in `worker/wrangler.toml`. Offen sind
+> nur noch `login`, `deploy` und das Eintragen der `counterUrl`. Die Schritte 1
+> und 2 stehen hier trotzdem, falls die Datenbank mal neu aufgesetzt werden muss.
+
+```bash
+cd worker
+npx wrangler@latest login
+```
+
+**1. Datenbank anlegen** (D1, im kostenlosen Kontingent enthalten):
+
+```bash
+npx wrangler@latest d1 create fruende-scans
+```
+
+Der Befehl gibt eine `database_id` aus. Die in `worker/wrangler.toml` bei
+`database_id` eintragen.
+
+**2. Tabelle anlegen:**
+
+```bash
+npx wrangler@latest d1 execute fruende-scans --remote --file=schema.sql
+```
+
+**3. Worker veröffentlichen:**
+
+```bash
+npx wrangler@latest deploy
+```
+
+Am Ende steht die Adresse des Workers, etwa
+`https://fruende-scans.dein-name.workers.dev`.
+
+**4. Adresse eintragen** in `site.config.json` unter `counterUrl`, **ohne Slash
+am Ende**, dann neu bauen und pushen:
+
+```json
+"counterUrl": "https://fruende-scans.dein-name.workers.dev"
+```
+
+Solange `counterUrl` leer ist, wird kein Pixel eingebaut – lokales Testen
 verfälscht die Statistik also nicht.
 
-**Scans pro Person ablesen:** jeder Scan ist ein Seitenaufruf des Pfads `/1/`,
-`/2/` usw. Zu finden unter *Berichte → Interaktion → Seiten und Bildschirme*.
-Welche Ziffer zu wem gehört, steht in `data/people.json` – und auf dem QR-Bogen.
+### Zahlen ansehen
 
-Zusätzlich sendet jede Karte ein Event `scan` mit dem Parameter `person`. Damit
-GA4 diesen Parameter in Berichten anzeigt, muss er einmalig registriert werden:
-*Verwaltung → Datenanzeige → Benutzerdefinierte Definitionen → Benutzerdefinierte
-Dimension erstellen*, Bereich **Ereignis**, Ereignisparameter `person`. Danach
-lässt sich ein Bericht bauen, der die zehn direkt als Rangliste zeigt.
+Die Rangliste steht öffentlich unter `/stats/` und ist von der Startseite aus
+verlinkt. Rohdaten als JSON gibt es unter `<counterUrl>/stats`.
 
-Neue Daten brauchen bis zu 24 h; sofort sichtbar ist alles unter
-*Berichte → Echtzeit*.
+### Was gespeichert wird
+
+Pro Scan genau zwei Angaben: **welche Karte** und **wann**. Keine IP-Adresse,
+kein User-Agent, kein Cookie, keine Kennung, mit der sich zwei Scans einander
+zuordnen liessen. Deshalb braucht die Seite auch kein Consent-Banner. Die
+Datenschutzseite beschreibt genau das – wenn du am Worker etwas änderst, halte
+sie bitte aktuell (`privacyPage` in `src/templates.mjs`).
+
+Vorschau-Bots von WhatsApp, Telegram & Co. werden am User-Agent erkannt und
+nicht mitgezählt, sonst würde jeder geteilte Link die Statistik aufblähen.
+
+### Wenn jemand dazukommt
+
+Die erlaubten Slugs stehen im Worker als Liste (`SLUGS` in `worker/src/index.js`)
+und müssen zu `data/people.json` passen. Kommt eine elfte Person dazu: dort
+ergänzen und `npx wrangler@latest deploy` erneut ausführen. Alles andere wird still
+ignoriert – so landet kein Müll in der Datenbank.
 
 ## QR-Codes drucken
 
@@ -165,8 +227,9 @@ Für den Textildruck: mindestens **4 × 4 cm**, die weisse Fläche rundherum
 
 ```
 data/people.json      Inhalte aller zehn Personen
-site.config.json      Basis-URL, GA-Mess-ID, Titel
-src/templates.mjs     HTML der Karten, Übersicht, Datenschutz, 404, QR-Bogen
+site.config.json      Basis-URL, Zähler-Adresse, Titel
+src/templates.mjs     HTML der Karten, Übersicht, Statistik, Datenschutz, 404, QR-Bogen
+worker/               Cloudflare Worker: Scan-Zähler und Auswertung
 src/icons.mjs         Icons und URL-Aufbau der Kontakt-Buttons
 src/style.css         gesamtes Design
 static/img/           Profilbilder, Platzhalter, Favicon
@@ -181,5 +244,7 @@ Der Titel „Echte Fründe" auf der Startseite läuft in **UnifrakturMaguntia**
 beim Scannen also kein Google-Server kontaktiert. Nur die Startseite benutzt sie –
 die Kartenseiten laden die Datei gar nicht erst.
 
-Die ausgelieferten Karten sind reines HTML und CSS. JavaScript läuft nur für
-Analytics – fällt es aus, ist die Visitenkarte trotzdem vollständig da.
+Die zehn Kartenseiten – also genau das, was beim Scannen aufgerufen wird – sind
+reines HTML und CSS, ganz ohne JavaScript. Auch der Scan-Zähler kommt ohne aus,
+weil er ein Bild und kein Skript ist. JavaScript läuft einzig auf der
+Statistikseite `/stats/`, um die Zahlen nachzuladen.
