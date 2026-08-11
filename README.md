@@ -36,8 +36,8 @@ Dann <http://localhost:5173> öffnen.
 
 ```json
 {
-  "slug": "daniel",
-  "name": "Daniel",
+  "slug": "1",
+  "name": "Pilla",
   "spruch": "Hier steht was Lustiges.",
   "accent": "#e8623d",
   "links": [
@@ -47,9 +47,11 @@ Dann <http://localhost:5173> öffnen.
 }
 ```
 
-- **`slug`** wird zur URL (`…/daniel/`) und zum Dateinamen des QR-Codes.
-  Nur Kleinbuchstaben, Ziffern und Bindestriche. **Nach dem Druck der Shirts
-  darf sich der Slug nicht mehr ändern** – sonst zeigt der Code ins Leere.
+- **`slug`** wird zur URL (`…/1/`) und zum Dateinamen des QR-Codes. Erlaubt sind
+  Kleinbuchstaben, Ziffern und Bindestriche – bewusst nur eine Ziffer, weil jedes
+  zusätzliche Zeichen den QR-Code dichter und auf Stoff schlechter scannbar macht.
+  **Nach dem Druck der Shirts darf sich der Slug nicht mehr ändern** – sonst zeigt
+  der Code ins Leere.
 - **`accent`** ist die Farbe des Kartenkopfs und der Buttons. Weglassen geht auch.
 - **`links`** darf leer sein (`[]`) – dann werden schlicht keine Buttons angezeigt.
 
@@ -68,10 +70,25 @@ Mögliche Link-Typen und was als `value` reingehört:
 
 ### Profilbilder
 
-Kommen nach `static/img/` und heissen wie der Slug: `daniel.jpg`. Erlaubt sind
-`.jpg`, `.jpeg`, `.png`, `.webp` und `.avif`. Am besten **quadratisch, ca. 600×600 px** –
-das Bild wird rund beschnitten, wichtige Bildteile also mittig halten. Fehlt ein
-Bild, nimmt der Build automatisch einen Platzhalter und sagt beim Bauen Bescheid.
+Kommen nach `static/img/`. Der Dateiname darf entweder der Slug oder der Vorname
+sein – beides wird gefunden, Gross-/Kleinschreibung egal:
+
+```
+static/img/8.png       ← geht
+static/img/ivan.png    ← geht genauso
+```
+
+Erlaubt sind `.jpg`, `.jpeg`, `.png`, `.webp` und `.avif`. Wer es ganz explizit
+will, setzt in `data/people.json` ein `"image": "irgendwas.jpg"` – das schlägt
+beide Namenskonventionen.
+
+Am besten **quadratisch, ca. 600×600 px**. Das Bild wird rund beschnitten und
+füllt den Kreis aus (`object-fit: cover`), Wichtiges gehört also in die Mitte.
+Breite Bilder verlieren links und rechts etwas – bei Logos mit Schriftzug fällt
+das schnell auf.
+
+Fehlt ein Bild, nimmt der Build automatisch einen Platzhalter und sagt beim
+Bauen Bescheid.
 
 ## Veröffentlichen (GitHub Pages)
 
@@ -98,8 +115,9 @@ Bild, nimmt der Build automatisch einen Platzhalter und sagt beim Bauen Bescheid
 Solange `ga4Id` leer ist, wird gar kein Analytics-Code eingebaut – lokales Testen
 verfälscht die Statistik also nicht.
 
-**Scans pro Person ablesen:** jeder Scan ist ein Seitenaufruf des Pfads `/daniel/`.
-Zu finden unter *Berichte → Interaktion → Seiten und Bildschirme*.
+**Scans pro Person ablesen:** jeder Scan ist ein Seitenaufruf des Pfads `/1/`,
+`/2/` usw. Zu finden unter *Berichte → Interaktion → Seiten und Bildschirme*.
+Welche Ziffer zu wem gehört, steht in `data/people.json` – und auf dem QR-Bogen.
 
 Zusätzlich sendet jede Karte ein Event `scan` mit dem Parameter `person`. Damit
 GA4 diesen Parameter in Berichten anzeigt, muss er einmalig registriert werden:

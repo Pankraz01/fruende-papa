@@ -60,6 +60,19 @@ const imageDir = path.join(root, 'static', 'img');
 const availableImages = existsSync(imageDir) ? await readdir(imageDir) : [];
 const seenSlugs = new Set();
 
+// Gross-/Kleinschreibung soll beim Dateinamen egal sein (Ivan.PNG vs ivan.png).
+const imagesByLowerName = new Map(availableImages.map((f) => [f.toLowerCase(), f]));
+
+/** Name → Dateiname-tauglich: "Rochus" → "rochus", "Jörg" → "joerg". */
+const nameSlug = (name) =>
+  String(name)
+    .toLowerCase()
+    .replace(/ä/g, 'ae')
+    .replace(/ö/g, 'oe')
+    .replace(/ü/g, 'ue')
+    .replace(/ß/g, 'ss')
+    .replace(/[^a-z0-9]/g, '');
+
 for (const person of people) {
   if (!person.slug || !SLUG_RE.test(person.slug)) {
     throw new Error(
@@ -85,15 +98,24 @@ for (const person of people) {
     }
   }
 
-  // Profilbild suchen; fehlt es, greift der Platzhalter.
-  const found = IMAGE_EXTENSIONS.map((ext) => `${person.slug}${ext}`).find((f) =>
-    availableImages.includes(f)
-  );
+  // Profilbild suchen. Erlaubt ist der Slug (8.png) oder der Name (ivan.png) –
+  // beim Einsammeln von zehn Fotos ist der Name schlicht weniger fehleranfällig.
+  // Ein explizites "image" in people.json schlägt beides. Fehlt alles, greift
+  // der Platzhalter.
+  const candidates = [
+    person.image,
+    ...IMAGE_EXTENSIONS.flatMap((ext) => [`${person.slug}${ext}`, `${nameSlug(person.name)}${ext}`]),
+  ].filter(Boolean);
+
+  const found = candidates
+    .map((c) => imagesByLowerName.get(c.toLowerCase()))
+    .find(Boolean);
+
   if (found) {
     person.image = `img/${found}`;
   } else {
     person.image = 'img/placeholder.svg';
-    warn(`${person.slug}: kein Profilbild in static/img/ gefunden – Platzhalter wird benutzt.`);
+    warn(`${person.slug} (${person.name}): kein Profilbild in static/img/ gefunden – Platzhalter wird benutzt.`);
   }
 }
 
