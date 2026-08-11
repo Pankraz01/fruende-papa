@@ -1,0 +1,76 @@
+[
+  {
+    "slug": "person-1",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#e8623d",
+    "links": [
+      { "type": "instagram", "value": "username" },
+      { "type": "whatsapp", "value": "41791234567" },
+      { "type": "email", "value": "name@example.com" }
+    ]
+  },
+  {
+    "slug": "person-2",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#3d8ee8",
+    "links": [{ "type": "instagram", "value": "username" }]
+  },
+  {
+    "slug": "person-3",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#2fb08a",
+    "links": []
+  },
+  {
+    "slug": "person-4",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#b657d6",
+    "links": []
+  },
+  {
+    "slug": "person-5",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#d9a323",
+    "links": []
+  },
+  {
+    "slug": "person-6",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#e0507f",
+    "links": []
+  },
+  {
+    "slug": "person-7",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#5566e0",
+    "links": []
+  },
+  {
+    "slug": "person-8",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#39a94b",
+    "links": []
+  },
+  {
+    "slug": "person-9",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#c9603a",
+    "links": []
+  },
+  {
+    "slug": "person-10",
+    "name": "Vorname",
+    "spruch": "Hier steht was Lustiges über mich.",
+    "accent": "#00a3a3",
+    "links": []
+  }
+]

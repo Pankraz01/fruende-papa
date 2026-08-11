@@ -1,0 +1,14 @@
+{
+  "name": "echte-fruende-visitenkarten",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Digitale Visitenkarten hinter den QR-Codes auf den T-Shirts.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "npm run build && npx --yes serve dist -l 5173"
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4"
+  }
+}

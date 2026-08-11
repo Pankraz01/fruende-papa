@@ -1,0 +1,7 @@
+{
+  "_hinweis": "baseUrl MUSS final sein, bevor die QR-Codes gedruckt werden. Ohne Slash am Ende.",
+  "baseUrl": "https://DEIN-USERNAME.github.io/fruende",
+  "ga4Id": "",
+  "siteTitle": "Echte Fründe",
+  "siteDescription": "Zehn Shirts, zehn QR-Codes, zehn Visitenkarten."
+}
