@@ -94,10 +94,11 @@ Bauen Bescheid.
 
 1. Repo auf GitHub anlegen und pushen.
 2. Unter **Settings → Pages → Build and deployment → Source** auf **GitHub Actions** stellen.
-3. In `site.config.json` die `baseUrl` auf die echte Adresse setzen, **ohne Slash am Ende**:
+3. In `site.config.json` steht die `baseUrl` – die echte Adresse, **ohne Slash am Ende**:
    ```json
-   "baseUrl": "https://deinname.github.io/fruende"
+   "baseUrl": "https://pankraz01.github.io/fruende-papa"
    ```
+   Das Repo auf GitHub muss also `fruende-papa` heissen, sonst stimmen die QR-Codes nicht.
 4. Pushen. Der Workflow in `.github/workflows/deploy.yml` baut und deployt automatisch.
 
 > **Kurze URL = besser scannbarer Code.** Jedes Zeichen mehr in der URL macht den
