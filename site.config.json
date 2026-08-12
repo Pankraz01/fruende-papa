@@ -3,6 +3,5 @@
   "baseUrl": "https://pankraz01.github.io/fruende-papa",
   "counterUrl": "https://fruende-scans.echte-fruende.workers.dev",
   "_counterUrl": "Adresse des Cloudflare-Workers, z.B. https://fruende-scans.DEIN-SUBDOMAIN.workers.dev - ohne Slash am Ende. Solange leer, wird nicht gezählt.",
-  "siteTitle": "Echte Fründe",
-  "siteDescription": "Echte Fründe ston zesamme su wie eine Jott un Pott"
+  "siteTitle": "Echte Fründe"
 }

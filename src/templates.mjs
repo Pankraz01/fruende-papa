@@ -42,10 +42,12 @@ function counterBeacon(config, person) {
 
 /** Gemeinsamer <head>. `base` ist der relative Pfad zum Wurzelverzeichnis. */
 function head({ title, description, base, config, person, ogImage, ogUrl, noindex }) {
+  // Ohne description keine Beschreibungs-Tags – so landet auf der Startseite
+  // nirgends ein Text, den eine Linkvorschau (WhatsApp & Co.) anzeigen könnte.
   const meta = [
     `<meta property="og:type" content="profile">`,
     `<meta property="og:title" content="${esc(title)}">`,
-    `<meta property="og:description" content="${esc(description)}">`,
+    description ? `<meta property="og:description" content="${esc(description)}">` : '',
     ogUrl ? `<meta property="og:url" content="${esc(ogUrl)}">` : '',
     ogImage ? `<meta property="og:image" content="${esc(ogImage)}">` : '',
     `<meta name="twitter:card" content="${ogImage ? 'summary_large_image' : 'summary'}">`,
@@ -58,10 +60,9 @@ function head({ title, description, base, config, person, ogImage, ogUrl, noinde
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>${esc(title)}</title>
-  <meta name="description" content="${esc(description)}">${
-    noindex ? '\n  <meta name="robots" content="noindex, nofollow">' : ''
-  }
+  <title>${esc(title)}</title>${
+    description ? `\n  <meta name="description" content="${esc(description)}">` : ''
+  }${noindex ? '\n  <meta name="robots" content="noindex, nofollow">' : ''}
   <meta name="theme-color" content="${esc(person?.accent || '#e8623d')}">
   ${meta}
   <link rel="stylesheet" href="${base}style.css">
@@ -139,7 +140,6 @@ export function indexPage(people, { config }) {
 
   return `${head({
     title: config.siteTitle,
-    description: config.siteDescription,
     base: './',
     config,
     ogUrl: `${config.baseUrl}/`,
