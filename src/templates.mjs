@@ -343,7 +343,12 @@ export function qrSheet(people, { config }) {
         <img src="${esc(p.slug)}.svg" alt="QR-Code für ${esc(p.name)}">
         <strong>${esc(p.name)}</strong>
         <code>${esc(config.baseUrl)}/${esc(p.slug)}/</code>
-        <p class="noprint"><a href="${esc(p.slug)}.svg" download>SVG</a> · <a href="${esc(p.slug)}-invert.svg" download>SVG hell</a></p>
+        <p class="noprint">
+          <a href="${esc(p.slug)}.svg" download>SVG</a> ·
+          <a href="${esc(p.slug)}-invert.svg" download>SVG hell</a> ·
+          <a href="${esc(p.slug)}.eps" download>EPS</a> ·
+          <a href="${esc(p.slug)}-invert.eps" download>EPS hell</a>
+        </p>
       </li>`
     )
     .join('\n');
@@ -360,7 +365,9 @@ export function qrSheet(people, { config }) {
     <p class="lead noprint">Vor dem Druck bitte jeden Code einmal mit dem Handy vom
     Bildschirm scannen und prüfen, ob er auf der richtigen Karte landet.
     <strong>SVG</strong> ist schwarz auf weiss (helle Shirts),
-    <strong>SVG hell</strong> ist weiss auf transparent (dunkle Shirts).</p>
+    <strong>SVG hell</strong> ist weiss auf transparent (dunkle Shirts).
+    <strong>EPS</strong> ist dasselbe als PostScript-Vektordatei, falls die
+    Druckerei kein SVG einliest.</p>
     <ul class="qr-grid">
 ${items}
     </ul>

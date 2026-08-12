@@ -11,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 
+import { qrToEps } from './src/eps.mjs';
 import {
   cardPage,
   indexPage,
@@ -54,9 +55,15 @@ if (config.baseUrl.includes('DEIN-USERNAME')) {
 }
 
 // Absoluter Pfad, unter dem die Seite liegt – wird für 404.html gebraucht.
+// customDomainHost: nur gesetzt, wenn die baseUrl keinen Pfad hat (also eine
+// eigene Domain statt eines Unterpfads auf *.github.io ist) – dafür schreiben
+// wir unten ein CNAME, damit GitHub Pages die Domain kennt.
+let customDomainHost;
 try {
-  const p = new URL(config.baseUrl).pathname.replace(/\/+$/, '');
+  const u = new URL(config.baseUrl);
+  const p = u.pathname.replace(/\/+$/, '');
   config.rootPath = `${p}/`;
+  if (!p) customDomainHost = u.hostname;
 } catch {
   throw new Error(`site.config.json: baseUrl ist keine gültige URL: ${config.baseUrl}`);
 }
@@ -172,13 +179,27 @@ await writeFile(path.join(dist, '404.html'), notFoundPage({ config }));
 // Ohne .nojekyll ignoriert GitHub Pages Dateien und Ordner mit Unterstrich.
 await writeFile(path.join(dist, '.nojekyll'), '');
 
+// Eigene Domain: CNAME-Datei, damit GitHub Pages sie bei jedem Deploy kennt.
+// Ohne diese Datei im Artefakt müsste man sich bei jedem Deploy erneut auf
+// die Einstellung aus der GitHub-UI verlassen – mit ihr steht es im Repo.
+if (customDomainHost) {
+  await writeFile(path.join(dist, 'CNAME'), `${customDomainHost}\n`);
+}
+
 /* ---------------------------------------------------------- QR-Codes */
 
 // Fehlerkorrektur "M" statt des dichteren "H": auf dehnbarem Stoff senkt jede
 // zusätzliche Modulreihe die Scanrate spürbar.
 // `width` setzt nur width/height im SVG-Tag – der Inhalt bleibt Vektor. Manche
 // Druckereien stolpern über SVGs ganz ohne Grössenangabe.
-const qrOptions = { type: 'svg', errorCorrectionLevel: 'M', margin: 4, width: 1024 };
+const ERROR_CORRECTION = 'M';
+const MARGIN = 4;
+const qrOptions = { type: 'svg', errorCorrectionLevel: ERROR_CORRECTION, margin: MARGIN, width: 1024 };
+
+// Ein Modul = 10 pt (≈ 3,5 mm). EPS ist Vektor, Druckereien skalieren ohnehin
+// frei – die Zahl legt nur fest, in welcher Grösse das Dokument standardmässig
+// eingebettet wird.
+const EPS_UNIT = 10;
 
 for (const person of people) {
   const url = `${config.baseUrl}/${person.slug}/`;
@@ -194,6 +215,28 @@ for (const person of people) {
     color: { dark: '#ffffffff', light: '#00000000' },
   });
   await writeFile(path.join(dist, 'qr', `${person.slug}-invert.svg`), light);
+
+  // Dieselbe Kodierung (URL, Fehlerkorrektur, Ruhezone) wie die SVGs oben –
+  // `create()` liefert nur die Modul-Matrix, wir zeichnen sie selbst.
+  const qrData = QRCode.create(url, { errorCorrectionLevel: ERROR_CORRECTION });
+
+  const epsDark = qrToEps(qrData, {
+    unit: EPS_UNIT,
+    margin: MARGIN,
+    ink: [0, 0, 0],
+    background: [1, 1, 1],
+    title: `QR ${person.name}`,
+  });
+  await writeFile(path.join(dist, 'qr', `${person.slug}.eps`), epsDark);
+
+  const epsLight = qrToEps(qrData, {
+    unit: EPS_UNIT,
+    margin: MARGIN,
+    ink: [1, 1, 1],
+    background: null,
+    title: `QR ${person.name} (hell)`,
+  });
+  await writeFile(path.join(dist, 'qr', `${person.slug}-invert.eps`), epsLight);
 }
 
 await writeFile(path.join(dist, 'qr', 'index.html'), qrSheet(people, { config }));

@@ -109,16 +109,44 @@ einen Unterschied sieht. Die Originale der zehn liegen unverändert in
 2. Unter **Settings → Pages → Build and deployment → Source** auf **GitHub Actions** stellen.
 3. In `site.config.json` steht die `baseUrl` – die echte Adresse, **ohne Slash am Ende**:
    ```json
-   "baseUrl": "https://pankraz01.github.io/fruende-papa"
+   "baseUrl": "https://qr.danieljuric.eu"
    ```
-   Das Repo auf GitHub muss also `fruende-papa` heissen, sonst stimmen die QR-Codes nicht.
 4. Pushen. Der Workflow in `.github/workflows/deploy.yml` baut und deployt automatisch.
 
 > **Kurze URL = besser scannbarer Code.** Jedes Zeichen mehr in der URL macht den
-> QR-Code dichter, und auf dehnbarem Stoff sinkt damit die Scanrate. Eine kurze
-> eigene Domain ist ideal; sonst lieber ein kurzes, ASCII-reines Repo wie
-> `fruende` als etwas Langes mit Umlaut – letzteres landet als
-> `EchteFr%C3%BCnde…` in der URL und bläht den Code unnötig auf.
+> QR-Code dichter, und auf dehnbarem Stoff sinkt damit die Scanrate.
+
+### Eigene Domain (`qr.danieljuric.eu`)
+
+Hat `baseUrl` **keinen Pfad** – nur Schema und Host, wie oben –, erkennt der
+Build das automatisch als eigene Domain und schreibt beim nächsten `npm run
+build` eine Datei `dist/CNAME` mit dem Hostnamen hinein. Das ist nötig, damit
+GitHub Pages die Domain bei jedem einzelnen Deploy (neu) kennt – sonst würde
+die Einstellung nur so lange gelten, bis das nächste Mal alles frisch gebaut
+und hochgeladen wird.
+
+Damit es funktioniert, ausserhalb dieses Repos:
+
+1. Beim DNS-Anbieter von `danieljuric.eu` einen **CNAME-Eintrag** für `qr`
+   anlegen, der auf `pankraz01.github.io` zeigt.
+2. In den Repo-Settings unter **Pages → Custom domain** `qr.danieljuric.eu`
+   eintragen (falls nicht schon durch die CNAME-Datei erkannt) und speichern.
+3. Etwas warten, bis GitHub die Domain per DNS verifiziert hat – kann von
+   Minuten bis zu 24 Stunden dauern.
+
+**SSL-Zertifikat:** kein manueller Schritt nötig. Sobald GitHub die Domain
+verifiziert hat, stellt es automatisch und kostenlos ein Let's-Encrypt-Zertifikat
+aus. Danach in denselben Settings **Enforce HTTPS** anhaken, sobald die Option
+anwählbar wird.
+
+**Falls die Domain über Cloudflare läuft** (orange Wolke / Proxy aktiv): das
+kann Githubs automatische Zertifikatsausstellung stören, weil GitHub beim
+Verifizieren direkt auf seine eigenen Server auflösen will, aber stattdessen
+Cloudflare antwortet. Für einen unkomplizierten Start den DNS-Eintrag für `qr`
+zunächst auf **„DNS only“** (graue Wolke) stellen, bis „Enforce HTTPS“ in den
+GitHub-Settings aktivierbar ist. Ob und wie stattdessen eine geproxte
+Einrichtung sinnvoll ist, hängt davon ab, wie der Scan-Zähler künftig
+funktionieren soll – siehe nächster Abschnitt.
 
 ## Scan-Zähler einrichten (Cloudflare)
 
@@ -227,10 +255,15 @@ ignoriert – so landet kein Müll in der Datenbank.
 `npm run build` erzeugt sie automatisch mit. Danach `dist/qr/index.html` öffnen –
 dort liegen alle zehn nebeneinander, mit Ziel-URL darunter und Download-Links:
 
-- `<slug>.svg` – schwarz auf weiss, für helle Shirts
-- `<slug>-invert.svg` – weiss auf transparent, für dunkle Shirts
+- `<slug>.svg` / `<slug>.eps` – schwarz auf weiss, für helle Shirts
+- `<slug>-invert.svg` / `<slug>-invert.eps` – weiss auf transparent, für dunkle Shirts
 
-Beides sind Vektordateien und lassen sich beliebig vergrössern.
+Alles Vektordateien, beliebig vergrösserbar. **EPS** ist für Druckereien dabei,
+deren Software kein SVG einliest – inhaltlich identisch zum jeweiligen SVG,
+selbst erzeugt aus derselben QR-Kodierung (`src/eps.mjs`), nicht konvertiert.
+Die EPS-Farben sind einfaches RGB-Schwarz bzw. -Weiss; verlangt eine Druckerei
+Vollton-/Sonderfarbe (Spot Black), müssen sie das in ihrer eigenen Software
+umfärben.
 
 **Vor dem Druck unbedingt:**
 
@@ -249,6 +282,7 @@ site.config.json      Basis-URL, Zähler-Adresse, Titel
 src/templates.mjs     HTML der Karten, Übersicht, Statistik, Datenschutz, 404, QR-Bogen
 worker/               Cloudflare Worker: Scan-Zähler und Auswertung
 src/icons.mjs         Icons und URL-Aufbau der Kontakt-Buttons
+src/eps.mjs           QR-Codes als EPS zeichnen (aus der rohen Modul-Matrix)
 src/style.css         gesamtes Design
 static/img/           Profilbilder, Platzhalter, Favicon
 static/fonts/         Fraktur-Schrift für den Titel der Startseite
