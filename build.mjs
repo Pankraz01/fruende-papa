@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 
 import { qrToEps } from './src/eps.mjs';
+import { createZip } from './src/zip.mjs';
 import {
   cardPage,
   indexPage,
@@ -201,24 +202,38 @@ const qrOptions = { type: 'svg', errorCorrectionLevel: ERROR_CORRECTION, margin:
 // eingebettet wird.
 const EPS_UNIT = 10;
 
+// Für den Sammel-Download am Ende der Schleife eingesammelt.
+const qrFiles = [];
+
 for (const person of people) {
+  // Kanonische URL – steht als Text auf dem Bogen, landet in og:url usw.
   const url = `${config.baseUrl}/${person.slug}/`;
 
-  const dark = await QRCode.toString(url, {
+  // In den QR-Code selbst kommt zusätzlich das Merkmal `?s`: nur darüber kann
+  // eine Karte beim Aufruf erkennen, dass sie wirklich per Kamera gescannt
+  // wurde (siehe counterBeacon in src/templates.mjs), statt bloss eingetippt
+  // oder verlinkt worden zu sein. Steht nirgends als Text, nur im Bild.
+  const qrUrl = `${url}?s`;
+
+  const zipBase = `${person.slug}-${nameSlug(person.name)}`;
+
+  const dark = await QRCode.toString(qrUrl, {
     ...qrOptions,
     color: { dark: '#000000ff', light: '#ffffffff' },
   });
   await writeFile(path.join(dist, 'qr', `${person.slug}.svg`), dark);
+  qrFiles.push({ name: `${zipBase}.svg`, data: Buffer.from(dark, 'utf8') });
 
-  const light = await QRCode.toString(url, {
+  const light = await QRCode.toString(qrUrl, {
     ...qrOptions,
     color: { dark: '#ffffffff', light: '#00000000' },
   });
   await writeFile(path.join(dist, 'qr', `${person.slug}-invert.svg`), light);
+  qrFiles.push({ name: `${zipBase}-invert.svg`, data: Buffer.from(light, 'utf8') });
 
   // Dieselbe Kodierung (URL, Fehlerkorrektur, Ruhezone) wie die SVGs oben –
   // `create()` liefert nur die Modul-Matrix, wir zeichnen sie selbst.
-  const qrData = QRCode.create(url, { errorCorrectionLevel: ERROR_CORRECTION });
+  const qrData = QRCode.create(qrUrl, { errorCorrectionLevel: ERROR_CORRECTION });
 
   const epsDark = qrToEps(qrData, {
     unit: EPS_UNIT,
@@ -228,6 +243,7 @@ for (const person of people) {
     title: `QR ${person.name}`,
   });
   await writeFile(path.join(dist, 'qr', `${person.slug}.eps`), epsDark);
+  qrFiles.push({ name: `${zipBase}.eps`, data: Buffer.from(epsDark, 'utf8') });
 
   const epsLight = qrToEps(qrData, {
     unit: EPS_UNIT,
@@ -237,7 +253,10 @@ for (const person of people) {
     title: `QR ${person.name} (hell)`,
   });
   await writeFile(path.join(dist, 'qr', `${person.slug}-invert.eps`), epsLight);
+  qrFiles.push({ name: `${zipBase}-invert.eps`, data: Buffer.from(epsLight, 'utf8') });
 }
+
+await writeFile(path.join(dist, 'qr', 'alle-qr-codes.zip'), createZip(qrFiles));
 
 await writeFile(path.join(dist, 'qr', 'index.html'), qrSheet(people, { config }));
 

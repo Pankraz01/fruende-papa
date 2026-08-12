@@ -292,12 +292,55 @@ body.page-wide {
 .stats-total {
   font-size: 1.25rem;
   font-weight: 650;
-  margin: 0 0 18px;
+  margin: 0;
+}
+
+.stats-breakdown {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 4px 0 16px;
 }
 
 .stats-hint {
   font-size: 0.85rem;
   margin-top: 20px;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 0;
+  margin: 0 0 20px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex: none;
+}
+
+/* Repräsentativ – im echten Balken hat jede Person ihre eigene Akzentfarbe. */
+.legend-swatch--scan {
+  background: var(--accent);
+}
+
+.legend-swatch--panel {
+  background: color-mix(in srgb, var(--text) 45%, transparent);
+}
+
+.legend-swatch--direct {
+  background: color-mix(in srgb, var(--text) 18%, transparent);
 }
 
 .rank {
@@ -350,22 +393,34 @@ body.page-wide {
   color: var(--text);
 }
 
-/* Balkenlänge kommt als --w aus dem Skript, Farbe als --accent der Person. */
+/* Gesamtlänge kommt als --w aus dem Skript (Anteil an der grössten Person),
+   die drei Segmente darin verteilen sich per flex-grow proportional zu ihren
+   eigenen Aufrufzahlen – wächst automatisch mit, schrumpft bei 0 auf nichts. */
 .rank-bar {
+  display: flex;
+  width: var(--w, 0%);
   height: 6px;
   border-radius: 3px;
   background: var(--line);
-  position: relative;
   overflow: hidden;
 }
 
-.rank-bar::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: var(--w, 0%);
+.rank-seg {
+  flex-shrink: 0;
+  flex-basis: 0;
+  height: 100%;
+}
+
+.rank-seg--scan {
   background: var(--accent);
-  border-radius: inherit;
+}
+
+.rank-seg--panel {
+  background: color-mix(in srgb, var(--text) 45%, transparent);
+}
+
+.rank-seg--direct {
+  background: color-mix(in srgb, var(--text) 18%, transparent);
 }
 
 .rank-count {
@@ -386,6 +441,31 @@ body.page-wide {
 }
 
 /* ---------- QR-Bogen zum Drucken ---------- */
+
+.qr-zip {
+  margin: 0 0 26px;
+}
+
+/* `.page a.qr-zip__button` statt nur `.qr-zip__button`: die allgemeine Regel
+   „.page a:not(.tile)“ weiter oben hat höhere Spezifität (Klasse+Pseudo+Element)
+   und würde die weisse Schrift sonst wieder auf die Akzentfarbe zurückfärben –
+   Text auf gleichfarbigem Grund, unsichtbar. */
+.page a.qr-zip__button {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .qr-zip__button:hover {
+    filter: brightness(1.08);
+  }
+}
 
 .qr-grid {
   display: grid;

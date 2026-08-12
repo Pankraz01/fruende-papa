@@ -223,25 +223,40 @@ braucht die Seite auch kein Consent-Banner. Die Datenschutzseite beschreibt
 genau das – wenn du am Worker etwas änderst, halte sie bitte aktuell
 (`privacyPage` in `src/templates.mjs`).
 
-### Scan oder Durchklicken
+### Scan, Durchklicken oder Direktaufruf
 
 Wer über die Übersicht alle zehn Karten anschaut, würde sonst zehn Scans
 erzeugen. Deshalb hält jeder Datensatz fest, woher der Aufruf kam:
 
-| Wert   | Bedeutung |
-| ------ | --------- |
-| `scan` | kein Referrer – also direkt vom QR-Code (oder aus einem Chat, per Lesezeichen …) |
-| `main` | Klick von der Startseite aus |
-| `card` | Klick von einer anderen Karte aus |
+| Wert     | Bedeutung |
+| -------- | --------- |
+| `scan`   | die aufgerufene Adresse trug das Merkmal `?s` – das steht **nur** in den gedruckten QR-Codes |
+| `panel`  | kein Merkmal, aber Referrer ist die eigene Seite – Klick von der Übersicht oder einer anderen Karte |
+| `direct` | weder noch – eingetippt, Lesezeichen, oder ein Link, dessen Referrer die App unterdrückt hat |
 
-Als Scan gilt nur `scan`; die Rangliste zeigt ausschliesslich diese Zahl,
-`main` und `card` werden getrennt darunter ausgewiesen. Ermittelt wird das im
-Browser über `document.referrer` – **nicht** über die URL, damit die gedruckten
-QR-Codes unverändert bleiben. Ohne JavaScript greift ein `<noscript>`-Pixel:
-dann wird weiterhin gezählt, nur ohne Herkunft, und die Zeile gilt als Scan.
+Das Merkmal steckt **ausschliesslich im Bild** des QR-Codes (`build.mjs` hängt
+es beim Erzeugen an) – nirgends im für Menschen sichtbaren Text: nicht im
+QR-Bogen, nicht in `og:url`, nicht im Footer-Link. Wer die Adresse abtippt oder
+weiterleitet, verbreitet also nicht versehentlich das Merkmal mit.
+
+Die Rangliste sortiert nach `scan`; `panel` und `direct` werden als zusätzliche
+Balkensegmente daneben angezeigt, zählen aber nicht zur Platzierung – sonst
+könnte man sich durch simples Herumklicken selbst nach oben bringen.
+
+Ermittelt wird beides im Browser (`location.search` bzw. `document.referrer`),
+**nicht** serverseitig. Ohne JavaScript greift ein `<noscript>`-Pixel: dann
+wird weiterhin gezählt, aber immer als `direct`, weil sich die Adresszeile ohne
+JS nicht auslesen lässt.
 
 Vorschau-Bots von WhatsApp, Telegram & Co. werden am User-Agent erkannt und
 nicht mitgezählt, sonst würde jeder geteilte Link die Statistik aufblähen.
+
+**Nach jeder Änderung an dieser Logik** (in `worker/src/index.js`) muss der
+Worker neu deployt werden, sonst zählt er nach den alten Regeln weiter:
+
+```bash
+cd worker && npx wrangler@latest deploy
+```
 
 ### Wenn jemand dazukommt
 
@@ -264,6 +279,13 @@ selbst erzeugt aus derselben QR-Kodierung (`src/eps.mjs`), nicht konvertiert.
 Die EPS-Farben sind einfaches RGB-Schwarz bzw. -Weiss; verlangt eine Druckerei
 Vollton-/Sonderfarbe (Spot Black), müssen sie das in ihrer eigenen Software
 umfärben.
+
+Oben auf der Seite gibt es zusätzlich **„Alle 40 Dateien als ZIP
+herunterladen“** – praktisch, um alles in einem Rutsch an eine Druckerei zu
+schicken. Das ZIP wird beim Build mit erzeugt (`dist/qr/alle-qr-codes.zip`,
+`src/zip.mjs`), nicht erst im Browser gepackt. Die Dateien darin heissen
+`<slug>-<name>.<endung>`, z. B. `8-ivan.eps`, statt nur `8.eps` – besser
+lesbar, sobald das Archiv einmal entpackt ist.
 
 **Vor dem Druck unbedingt:**
 

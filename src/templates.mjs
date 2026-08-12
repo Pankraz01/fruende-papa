@@ -17,27 +17,36 @@ export const esc = (s) =>
  *  JavaScript. Ohne counterUrl entfällt alles – lokales Testen verfälscht die
  *  Statistik also nicht.
  *
- *  Woher der Aufruf kam, verrät `document.referrer`: beim Scan aus der
- *  Kamera-App ist er leer, beim Klick aus der Übersicht steht dort unsere
- *  Startseite. Das braucht JavaScript, taucht aber weder in der URL auf noch
- *  im QR-Code. Wer JS aus hat, wird über <noscript> weiterhin gezählt – dann
- *  eben ohne Herkunft. */
+ *  Drei Herkünfte werden unterschieden:
+ *   - `scan`   die aufgerufene URL trägt das Merkmal `?s`, das AUSSCHLIESSLICH
+ *              in den gedruckten QR-Codes steckt (siehe build.mjs) – wer das
+ *              in der Adresse hat, hat wirklich den Code gescannt.
+ *   - `panel`  kein Merkmal, aber der Referrer ist unsere eigene Seite – ein
+ *              Klick von der Übersicht oder einer anderen Karte aus.
+ *   - `direct` weder noch: eingetippt, Lesezeichen, oder ein geteilter Link,
+ *              dessen Referrer die App unterdrückt hat.
+ *  Das Merkmal steht nicht in der für Menschen sichtbaren URL (Fusszeile,
+ *  QR-Bogen-Text) – nur im tatsächlich codierten Ziel des QR-Bilds. Wer JS aus
+ *  hat, wird über <noscript> weiterhin gezählt, dann als `direct`: ohne
+ *  JavaScript lässt sich die Adresszeile nicht auslesen. */
 function counterBeacon(config, person) {
   if (!config.counterUrl || !person) return '';
 
   const api = JSON.stringify(`${config.counterUrl}/px?p=${encodeURIComponent(person.slug)}`);
   const base = JSON.stringify(config.baseUrl);
+  const fallbackPx = esc(`${config.counterUrl}/px?p=${encodeURIComponent(person.slug)}&from=direct`);
 
   return `
   <script>
     (function () {
-      var base = ${base}, ref = document.referrer, from = 'scan';
-      if (ref === base + '/' || ref === base) from = 'main';
-      else if (ref.indexOf(base + '/') === 0) from = 'card';
+      var base = ${base}, ref = document.referrer, from;
+      if (/[?&]s(&|=|$)/.test(location.search)) from = 'scan';
+      else if (ref === base + '/' || ref === base || ref.indexOf(base + '/') === 0) from = 'panel';
+      else from = 'direct';
       new Image().src = ${api} + '&from=' + from;
     })();
   </script>
-  <noscript><img class="px" src="${esc(`${config.counterUrl}/px?p=${encodeURIComponent(person.slug)}`)}" alt="" width="1" height="1" aria-hidden="true"></noscript>`;
+  <noscript><img class="px" src="${fallbackPx}" alt="" width="1" height="1" aria-hidden="true"></noscript>`;
 }
 
 /** Gemeinsamer <head>. `base` ist der relative Pfad zum Wurzelverzeichnis. */
@@ -170,6 +179,12 @@ export function statsPage(people, { config }) {
 
   const body = config.counterUrl
     ? `    <p class="stats-total" id="total"></p>
+    <p class="stats-breakdown" id="breakdown"></p>
+    <ul class="legend">
+      <li><span class="legend-swatch legend-swatch--scan"></span>gescannt</li>
+      <li><span class="legend-swatch legend-swatch--panel"></span>über diese Seite geklickt</li>
+      <li><span class="legend-swatch legend-swatch--direct"></span>direkt aufgerufen</li>
+    </ul>
     <ol class="rank" id="rank"></ol>
     <p class="stats-hint" id="hint">Zahlen werden geladen …</p>
 
@@ -185,35 +200,49 @@ export function statsPage(people, { config }) {
           'Die Zahlen sind gerade nicht erreichbar. Später nochmal probieren.';
       });
 
+    function stueck(n, einheit) { return n + ' ' + einheit + (n === 1 ? '' : (einheit === 'Scan' ? 's' : '')); }
+
     function render(data) {
-      var counts = {};
-      (data.people || []).forEach(function (row) { counts[row.person] = row.count; });
+      var byPerson = {};
+      (data.people || []).forEach(function (row) { byPerson[row.person] = row; });
+      var zero = { scan: 0, panel: 0, direct: 0, total: 0 };
 
       var rows = PEOPLE.map(function (p) {
-        return { p: p, count: counts[p.slug] || 0 };
-      }).sort(function (a, b) { return b.count - a.count || a.p.name.localeCompare(b.p.name); });
+        return { p: p, r: byPerson[p.slug] || zero };
+      }).sort(function (a, b) {
+        return b.r.scan - a.r.scan || b.r.total - a.r.total || a.p.name.localeCompare(b.p.name);
+      });
 
-      var max = Math.max(1, rows[0] ? rows[0].count : 0);
+      var maxTotal = Math.max(1, rows.reduce(function (m, row) { return Math.max(m, row.r.total); }, 0));
 
-      document.getElementById('total').textContent =
-        data.total === 1 ? '1 Scan insgesamt' : (data.total || 0) + ' Scans insgesamt';
+      document.getElementById('total').textContent = stueck(data.scanTotal || 0, 'Scan') + ' insgesamt';
+
+      document.getElementById('breakdown').textContent = (data.total || 0) + ' Aufrufe insgesamt – davon ' +
+        (data.scanTotal || 0) + ' gescannt, ' + (data.panelTotal || 0) + ' über diese Seite, ' +
+        (data.directTotal || 0) + ' direkt aufgerufen.';
 
       document.getElementById('rank').innerHTML = rows.map(function (row, i) {
-        var pct = Math.round((row.count / max) * 100);
+        var r = row.r, p = row.p;
+        var widthPct = Math.round((r.total / maxTotal) * 100);
+        var detail = r.total + ' Aufrufe: ' + r.scan + ' gescannt, ' + r.panel + ' über die Seite, ' + r.direct + ' direkt';
         return '<li class="rank-row">' +
           '<span class="rank-pos">' + (i + 1) + '</span>' +
-          '<img class="rank-img" src="../' + row.p.image + '" alt="" width="44" height="44" loading="lazy">' +
+          '<img class="rank-img" src="../' + p.image + '" alt="" width="44" height="44" loading="lazy">' +
           '<span class="rank-body">' +
-            '<span class="rank-name">' + row.p.name + '</span>' +
-            '<span class="rank-bar" style="--w:' + pct + '%; --accent:' + row.p.accent + '"></span>' +
+            '<span class="rank-name">' + p.name + '</span>' +
+            '<span class="rank-bar" style="--w:' + widthPct + '%" title="' + detail + '">' +
+              '<span class="rank-seg rank-seg--scan" style="flex-grow:' + r.scan + '; --accent:' + p.accent + '"></span>' +
+              '<span class="rank-seg rank-seg--panel" style="flex-grow:' + r.panel + '"></span>' +
+              '<span class="rank-seg rank-seg--direct" style="flex-grow:' + r.direct + '"></span>' +
+            '</span>' +
           '</span>' +
-          '<span class="rank-count">' + row.count + '</span>' +
+          '<span class="rank-count">' + r.scan + '</span>' +
         '</li>';
       }).join('');
 
       document.getElementById('hint').textContent = data.total
-        ? 'Gezählt werden nur Aufrufe vom QR-Code. Mehr dazu unter Datenschutz.'
-        : 'Noch kein einziger Scan. Shirt anziehen und rausgehen.';
+        ? 'Die Rangliste sortiert nach echten Scans. Mehr dazu unter Datenschutz.'
+        : 'Noch kein einziger Aufruf. Shirt anziehen und rausgehen.';
     }
   </script>`
     : `    <p>Der Zähler ist noch nicht eingerichtet – in <code>site.config.json</code>
@@ -248,9 +277,11 @@ export function privacyPage({ config }) {
     ? `<h2>Was gemessen wird</h2>
     <p>Wir zählen, wie oft welches Shirt gescannt wurde – mehr nicht. Beim Aufruf
     einer Visitenkarte wird genau dreierlei gespeichert: <strong>welche Karte</strong>
-    aufgerufen wurde, <strong>wann</strong>, und ob der Aufruf <strong>vom QR-Code
-    kam oder von einem Klick auf dieser Seite</strong> – damit wir uns die Statistik
-    nicht selbst kaputtklicken. Das war's.</p>
+    aufgerufen wurde, <strong>wann</strong>, und <strong>woher</strong> der Aufruf
+    kam – vom gedruckten QR-Code, durch Herumklicken auf dieser Seite, oder
+    weder noch. Damit können wir „wie oft wurde diese Karte wirklich vom Shirt
+    gescannt“ von „wie oft haben wir selbst draufgeklickt“ unterscheiden, statt
+    uns die eigene Statistik kaputtzuklicken. Das war's.</p>
 
     <p>Nicht gespeichert werden: deine IP-Adresse, dein Gerät, dein Browser, dein
     Standort, ein Verweis auf die Seite, von der du kamst, oder irgendeine Kennung,
@@ -276,9 +307,13 @@ export function privacyPage({ config }) {
     einem Inhaltsblocker – wird nicht gezählt. Die Visitenkarte funktioniert dann
     ganz normal weiter.</p>
 
-    <p>Woher der Aufruf kam, wird aus der Adresse der zuvor besuchten Seite
-    abgeleitet, die dein Browser ohnehin mitschickt. Gespeichert wird davon nicht
-    die Adresse, sondern nur die Einordnung „vom QR-Code“ oder „von dieser Seite“.</p>
+    <p>Woher der Aufruf kam, wird so bestimmt: die gedruckten QR-Codes enthalten
+    ein kleines, unsichtbares Kennzeichen in der codierten Adresse (ein
+    „<code>?s</code>“ am Ende) – nur so erkennt die Karte einen echten Scan
+    sicher. Steht das nicht in der Adresse, prüfen wir stattdessen, von welcher
+    Seite aus verlinkt wurde: das schickt dein Browser bei jedem Klick ohnehin
+    automatisch mit. Gespeichert wird von beidem nichts Genaueres – nur die
+    Einordnung „gescannt“, „über diese Seite“ oder „direkt“.</p>
 
     <h2>Was dabei herauskommt</h2>
     <p>Am Ende steht eine schlichte Rangliste: wie oft welche Karte aufgerufen
@@ -368,6 +403,9 @@ export function qrSheet(people, { config }) {
     <strong>SVG hell</strong> ist weiss auf transparent (dunkle Shirts).
     <strong>EPS</strong> ist dasselbe als PostScript-Vektordatei, falls die
     Druckerei kein SVG einliest.</p>
+    <p class="qr-zip noprint">
+      <a class="qr-zip__button" href="alle-qr-codes.zip" download>Alle 40 Dateien als ZIP herunterladen</a>
+    </p>
     <ul class="qr-grid">
 ${items}
     </ul>
