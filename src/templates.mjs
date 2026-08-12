@@ -148,7 +148,6 @@ export function indexPage(people, { config }) {
   <main class="page page--home">
     <header class="home-header">
       <h1 class="brand">${esc(config.siteTitle)}</h1>
-      <p class="lead">${esc(config.siteDescription)}</p>
     </header>
     <ul class="grid">
 ${tiles}
