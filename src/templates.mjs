@@ -212,17 +212,9 @@ export function statsPage(people, { config }) {
         '</li>';
       }).join('');
 
-      var hinweis = data.total
+      document.getElementById('hint').textContent = data.total
         ? 'Gezählt werden nur Aufrufe vom QR-Code. Mehr dazu unter Datenschutz.'
         : 'Noch kein einziger Scan. Shirt anziehen und rausgehen.';
-
-      if (data.internTotal) {
-        hinweis += ' Dazu kommen ' + data.internTotal + ' Klick' +
-          (data.internTotal === 1 ? '' : 's') +
-          ' über diese Seite, die nicht als Scan zählen.';
-      }
-
-      document.getElementById('hint').textContent = hinweis;
     }
   </script>`
     : `    <p>Der Zähler ist noch nicht eingerichtet – in <code>site.config.json</code>
