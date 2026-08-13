@@ -56,7 +56,7 @@ const CROPS = [
   ['ivan',   'ivan.jpg',       1024,  1536,    0,   30,  1024],
   ['mike',   'mike.png',       2540,  3764,    0,    0,  2108],
   ['otto',   'otto.png',        553,   779,  125,  198,   327],
-  ['pilla',  'pilla.png',       998,  1488,    0,  232,   684],
+  ['pilla',  'pilla.png',       333,   640,   45,    0,   205],
   ['rochus', 'rochus.png',      662,   850,   32,   71,   629],
   // ulli: Kopf mit Hut fuellt das Original fast komplett, breiter als die
   // Bildbreite geht nicht - y etwas hoeher gesetzt fuer Luft ueber dem Hut.
