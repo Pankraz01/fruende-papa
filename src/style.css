@@ -443,6 +443,9 @@ body.page-wide {
 /* ---------- QR-Bogen zum Drucken ---------- */
 
 .qr-zip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   margin: 0 0 26px;
 }
 
@@ -486,12 +489,19 @@ body.page-wide {
   break-inside: avoid;
 }
 
+/* Die QR-Dateien sind weiss auf transparent – ohne dunklen Grund wäre auf der
+   weissen Kachel nichts zu sehen. Die transparente Ruhezone im SVG wird dabei
+   gleich mit schwarz hinterlegt, so wie später auf dem Shirt. */
 .qr-item img {
   width: 100%;
   max-width: 150px;
   aspect-ratio: 1;
   display: block;
   margin: 0 auto 10px;
+  background: #000;
+  border-radius: 8px;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .qr-item strong {

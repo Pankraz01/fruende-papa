@@ -380,9 +380,7 @@ export function qrSheet(people, { config }) {
         <code>${esc(config.baseUrl)}/${esc(p.slug)}/</code>
         <p class="noprint">
           <a href="${esc(p.slug)}.svg" download>SVG</a> ·
-          <a href="${esc(p.slug)}-invert.svg" download>SVG hell</a> ·
-          <a href="${esc(p.slug)}.eps" download>EPS</a> ·
-          <a href="${esc(p.slug)}-invert.eps" download>EPS hell</a>
+          <a href="${esc(p.slug)}.eps" download>EPS</a>
         </p>
       </li>`
     )
@@ -399,12 +397,14 @@ export function qrSheet(people, { config }) {
     <h1 class="noprint">QR-Codes</h1>
     <p class="lead noprint">Vor dem Druck bitte jeden Code einmal mit dem Handy vom
     Bildschirm scannen und prüfen, ob er auf der richtigen Karte landet.
-    <strong>SVG</strong> ist schwarz auf weiss (helle Shirts),
-    <strong>SVG hell</strong> ist weiss auf transparent (dunkle Shirts).
+    Alle Dateien sind <strong>weiss auf transparentem Hintergrund</strong> –
+    gemacht für die dunklen Shirts. Auf weissem Grund betrachtet wirken sie
+    deshalb leer (der Code ist trotzdem drin), hier liegen sie darum auf Schwarz.
     <strong>EPS</strong> ist dasselbe als PostScript-Vektordatei, falls die
     Druckerei kein SVG einliest.</p>
     <p class="qr-zip noprint">
-      <a class="qr-zip__button" href="alle-qr-codes.zip" download>Alle 40 Dateien als ZIP herunterladen</a>
+      <a class="qr-zip__button" href="alle-qr-codes.zip" download>Alle ${people.length * 2} Dateien als ZIP herunterladen</a>
+      <a class="qr-zip__button" href="alle-eps.zip" download>Alle EPS herunterladen</a>
     </p>
     <ul class="qr-grid">
 ${items}

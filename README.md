@@ -270,20 +270,24 @@ ignoriert – so landet kein Müll in der Datenbank.
 `npm run build` erzeugt sie automatisch mit. Danach `dist/qr/index.html` öffnen –
 dort liegen alle zehn nebeneinander, mit Ziel-URL darunter und Download-Links:
 
-- `<slug>.svg` / `<slug>.eps` – schwarz auf weiss, für helle Shirts
-- `<slug>-invert.svg` / `<slug>-invert.eps` – weiss auf transparent, für dunkle Shirts
+- `<slug>.svg` / `<slug>.eps` – weiss auf transparentem Hintergrund, für die
+  dunklen Shirts (den Kontrast liefert der Stoff)
+
+**Wichtig:** Weil die Module weiss und der Hintergrund transparent ist, wirken
+die Dateien in Vorschauprogrammen mit weissem Hintergrund leer. Der Code ist
+trotzdem drin – auf der QR-Seite liegen die Vorschauen deshalb auf Schwarz.
 
 Alles Vektordateien, beliebig vergrösserbar. **EPS** ist für Druckereien dabei,
 deren Software kein SVG einliest – inhaltlich identisch zum jeweiligen SVG,
 selbst erzeugt aus derselben QR-Kodierung (`src/eps.mjs`), nicht konvertiert.
-Die EPS-Farben sind einfaches RGB-Schwarz bzw. -Weiss; verlangt eine Druckerei
-Vollton-/Sonderfarbe (Spot Black), müssen sie das in ihrer eigenen Software
-umfärben.
+Die EPS-Farbe ist einfaches RGB-Weiss; verlangt eine Druckerei
+Vollton-/Sonderfarbe, müssen sie das in ihrer eigenen Software umfärben.
 
-Oben auf der Seite gibt es zusätzlich **„Alle 40 Dateien als ZIP
-herunterladen“** – praktisch, um alles in einem Rutsch an eine Druckerei zu
-schicken. Das ZIP wird beim Build mit erzeugt (`dist/qr/alle-qr-codes.zip`,
-`src/zip.mjs`), nicht erst im Browser gepackt. Die Dateien darin heissen
+Oben auf der Seite gibt es zusätzlich **„Alle Dateien als ZIP herunterladen“**
+(SVG + EPS, `dist/qr/alle-qr-codes.zip`) und **„Alle EPS herunterladen“**
+(nur die EPS-Dateien, `dist/qr/alle-eps.zip`) – praktisch, um alles in einem
+Rutsch an eine Druckerei zu schicken. Beide ZIPs werden beim Build mit erzeugt
+(`src/zip.mjs`), nicht erst im Browser gepackt. Die Dateien darin heissen
 `<slug>-<name>.<endung>`, z. B. `8-ivan.eps`, statt nur `8.eps` – besser
 lesbar, sobald das Archiv einmal entpackt ist.
 
@@ -293,8 +297,9 @@ lesbar, sobald das Archiv einmal entpackt ist.
 2. Die Seite deployen und prüfen, dass die Karten wirklich erreichbar sind.
 3. Jeden Code einmal vom Bildschirm mit dem Handy scannen.
 
-Für den Textildruck: mindestens **4 × 4 cm**, die weisse Fläche rundherum
-(Quiet Zone) nicht wegschneiden, und ausreichend Kontrast zum Shirt lassen.
+Für den Textildruck: mindestens **4 × 4 cm**, die freie Fläche rundherum
+(Quiet Zone) nicht wegschneiden – sie muss auf dem Shirt dunkel bleiben,
+damit der weisse Code genug Kontrast hat.
 
 ## Aufbau
 
