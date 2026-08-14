@@ -5,7 +5,7 @@
     "spruch": "Ich bin der leeve Pilla 😀",
     "accent": "#e8623d",
     "links": [
-      { "type": "email", "value": "mailto:echtefruende@mail.de" },
+      { "type": "email", "value": "echtefruende@mail.de" }
     ]
   },
   {
@@ -13,62 +13,80 @@
     "name": "Bernd",
     "spruch": "et kütt wie et kütt",
     "accent": "#3d8ee8",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "3",
     "name": "Mike",
     "spruch": "Einen haben wir aber noch",
     "accent": "#2fb08a",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "4",
     "name": "Body",
     "spruch": "Nicht Perfekt, aber Original",
     "accent": "#b657d6",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "5",
     "name": "Rochus",
     "spruch": "leeve Jung",
     "accent": "#d9a323",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "6",
     "name": "Ulli",
     "spruch": "Genieße den Augenblick… 👍👍",
     "accent": "#e0507f",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "7",
     "name": "Otto",
     "spruch": "Stress mich nicht.",
     "accent": "#5566e0",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "8",
     "name": "Ivan",
     "spruch": "Home is where your Bauch doesn't have to be eingezogen!",
     "accent": "#39a94b",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "9",
     "name": "Harry",
     "spruch": "Haben die auch Cognac?",
     "accent": "#c9603a",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   },
   {
     "slug": "10",
     "name": "Helmut",
     "spruch": "Bei einem guten Weisswein sage ich nicht nein.",
     "accent": "#00a3a3",
-    "links": []
+    "links": [
+      { "type": "email", "value": "echtefruende@mail.de" }
+    ]
   }
 ]
