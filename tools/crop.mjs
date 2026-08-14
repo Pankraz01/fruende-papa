@@ -51,9 +51,9 @@ const CROPS = [
   ['body',   'body.png',       1539,  2203,  291,  304,   961],
   ['harry',  'harry.png',       441,   761,   37,   17,   353],
   ['helmut', 'helmut.png',     2116,  2619,  388,    0,  1728],
-  // ivan: Hut ist sehr breit - volle Bildbreite nutzen, sonst stoesst die
-  // Krempe an den Kreisrand und ueber dem Hut bleibt keine Luft.
-  ['ivan',   'ivan.jpg',       1024,  1536,    0,   30,  1024],
+  // ivan: Jugendfoto, schmales Hochformat - fast volle Bildbreite, leicht
+  // nach rechts versetzt, damit die dunkle linke Kante draussen bleibt.
+  ['ivan',   'ivan.png',        578,   750,   16,    4,   524],
   ['mike',   'mike.png',       2540,  3764,    0,    0,  2108],
   ['otto',   'otto.png',        553,   779,  125,  198,   327],
   ['pilla',  'pilla.png',       333,   640,   45,    0,   205],
