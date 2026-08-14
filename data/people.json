@@ -4,7 +4,9 @@
     "name": "Pilla",
     "spruch": "Ich bin der leeve Pilla 😀",
     "accent": "#e8623d",
-    "links": []
+    "links": [
+      { "type": "email", "value": "mailto:echtefruende@mail.de" },
+    ]
   },
   {
     "slug": "2",
